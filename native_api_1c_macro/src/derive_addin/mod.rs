@@ -6,6 +6,8 @@ use functions::{collectors::*, parse::parse_functions};
 use props::{collectors::*, parse::parse_props};
 use utils::{macros::tkn_err, str_literal_token};
 
+mod code_generator;
+mod collectors_base;
 mod constants;
 mod functions;
 mod parsers;
