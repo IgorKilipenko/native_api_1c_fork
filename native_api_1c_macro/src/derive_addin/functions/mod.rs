@@ -104,7 +104,7 @@ impl TryFrom<&str> for FuncParamType {
             STRING_TYPE => Ok(FuncParamType::PlatformType(ParamType::String)),
             DATE_TYPE => Ok(FuncParamType::PlatformType(ParamType::Date)),
             BLOB_TYPE => Ok(FuncParamType::PlatformType(ParamType::Blob)),
-            _ => Err(()),
+            _ => Err(())
         }
     }
 }

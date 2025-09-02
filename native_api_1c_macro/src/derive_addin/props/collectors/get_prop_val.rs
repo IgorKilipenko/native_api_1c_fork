@@ -41,7 +41,7 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for GetPropValCollector {
                 native_api_1c::native_api_1c_core::interface::ParamValue
             > {
                 #body
-                return Err(())
+                return Err(native_api_1c::native_api_1c_core::errors::PropertyError::not_found("Property not found").into())
             }
         };
 

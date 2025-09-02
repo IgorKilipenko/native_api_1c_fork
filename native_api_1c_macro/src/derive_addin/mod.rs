@@ -12,6 +12,15 @@ mod parsers;
 mod props;
 mod utils;
 
+/// Находит поле соединения в структуре
+fn find_connection_field(struct_data: &syn::DataStruct) -> Option<&syn::Field> {
+    struct_data.fields.iter().find(|field| {
+        field.attrs.iter().any(|attr| {
+            attr.path().is_ident("add_in_con") || attr.path().is_ident("connection")
+        })
+    })
+}
+
 pub fn derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     match derive_result(&derive_input) {
@@ -72,10 +81,16 @@ fn build_impl_block(input: &DeriveInput) -> Result<proc_macro2::TokenStream, dar
             .release()?,
     ];
 
+    let connection_field = find_connection_field(struct_data);
+    let connection_field_name = connection_field
+        .and_then(|f| f.ident.as_ref())
+        .map(|ident| quote! { #ident })
+        .unwrap_or_else(|| quote! { connection });
+
     let result = quote! {
         impl native_api_1c::native_api_1c_core::interface::AddInWrapper for #struct_ident {
             fn init(&mut self, interface: &'static native_api_1c::native_api_1c_core::ffi::connection::Connection) -> bool {
-                self.connection = std::sync::Arc::new(Some(interface));
+                self.#connection_field_name = std::sync::Arc::new(Some(interface));
                 true
             }
 

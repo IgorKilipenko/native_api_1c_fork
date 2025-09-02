@@ -37,7 +37,7 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for CallAsProcCollector {
                 params: &mut native_api_1c::native_api_1c_core::interface::ParamValues,
             ) -> native_api_1c::native_api_1c_core::interface::AddInWrapperResult<()> {
                 #body
-                Err(())
+                Err(native_api_1c::native_api_1c_core::errors::MethodError::not_found("Method not found").into())
             }
         };
 

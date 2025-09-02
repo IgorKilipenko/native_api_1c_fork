@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use native_api_1c::native_api_1c_core::{
+    errors::NativeApiError,
     ffi::connection::Connection,
     interface::{AddInWrapper, ParamValue},
 };
@@ -133,9 +134,14 @@ fn test_set_prop_val(
     #[case] value_getter: fn(&TestAddIn) -> i32,
     #[case] new_value: i32,
 ) {
-    assert_eq!(
-        add_in.set_prop_val(prop_i, ParamValue::I32(NEW_VALUE)),
-        expected_result
-    );
+    let result = add_in.set_prop_val(prop_i, ParamValue::I32(NEW_VALUE));
+    match expected_result {
+        Ok(()) => {
+            assert!(result.is_ok());
+        }
+        Err(()) => {
+            assert!(result.is_err());
+        }
+    }
     assert_eq!(value_getter(&add_in), new_value);
 }

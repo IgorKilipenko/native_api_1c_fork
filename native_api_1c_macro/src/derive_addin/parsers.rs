@@ -51,7 +51,7 @@ impl TryFrom<&str> for ParamType {
             STRING_TYPE => Ok(ParamType::String),
             DATE_TYPE => Ok(ParamType::Date),
             BLOB_TYPE => Ok(ParamType::Blob),
-            _ => Err(()),
+            _ => Err(())
         }
     }
 }

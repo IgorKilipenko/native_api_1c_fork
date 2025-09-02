@@ -44,7 +44,7 @@ impl<'a> FromIterator<(usize, &'a PropDesc)> for SetPropValCollector {
                 val: native_api_1c::native_api_1c_core::interface::ParamValue,
             ) -> native_api_1c::native_api_1c_core::interface::AddInWrapperResult<()> {
                 #body
-                return Err(())
+                return Err(native_api_1c::native_api_1c_core::errors::PropertyError::not_found("Property not found").into())
             }
         };
 

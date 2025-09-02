@@ -44,7 +44,7 @@ pub fn func_call_tkn(func: &FuncDesc, set_to: Option<&Ident>) -> TokenStream {
     if func.return_value.result {
         func_call.extend(quote! {
             if call_result.is_err() {
-                return Err(());
+                return Err(native_api_1c::native_api_1c_core::errors::MethodError::ExecutionFailed { message: "Function execution failed".to_string() }.into());
             }
             let call_result = call_result.unwrap();
         });
