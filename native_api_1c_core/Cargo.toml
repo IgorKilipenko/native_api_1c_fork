@@ -11,3 +11,4 @@ utf16_lit = "2.0"
 syn = { version = "2.0.28", features = ["full"] }
 quote = "1.0.32"
 chrono = "0.4.26"
+thiserror = "2"

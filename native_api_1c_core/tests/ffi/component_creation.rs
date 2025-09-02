@@ -2,7 +2,7 @@
 
 use std::sync::Arc;
 
-use native_api_1c_core::{
+use native_api_1c_core::{errors::NativeApiError, 
     ffi::{create_component, destroy_component},
     interface::{AddInWrapper, ParamValue, ParamValues},
 };
@@ -48,12 +48,12 @@ impl AddInWrapper for MockAddIn {
         None
     }
 
-    fn get_prop_val(&self, _num: usize) -> Result<ParamValue, ()> {
-        Err(())
+    fn get_prop_val(&self, _num: usize) -> Result<ParamValue, NativeApiError> {
+        Err(NativeApiError::operation("Operation failed"))
     }
 
-    fn set_prop_val(&mut self, _num: usize, _val: ParamValue) -> Result<(), ()> {
-        Err(())
+    fn set_prop_val(&mut self, _num: usize, _val: ParamValue) -> Result<(), NativeApiError> {
+        Err(NativeApiError::operation("Operation failed"))
     }
 
     fn is_prop_readable(&self, _num: usize) -> bool {
@@ -88,12 +88,12 @@ impl AddInWrapper for MockAddIn {
         false
     }
 
-    fn call_as_proc(&mut self, _method_num: usize, _params: &mut ParamValues) -> Result<(), ()> {
+    fn call_as_proc(&mut self, _method_num: usize, _params: &mut ParamValues) -> Result<(), NativeApiError> {
         Ok(())
     }
 
-    fn call_as_func(&mut self, _method_num: usize, _params: &mut ParamValues) -> Result<ParamValue, ()> {
-        Err(())
+    fn call_as_func(&mut self, _method_num: usize, _params: &mut ParamValues) -> Result<ParamValue, NativeApiError> {
+        Err(NativeApiError::operation("Operation failed"))
     }
 
     fn set_locale(&mut self, _loc: &[u16]) {}

@@ -1,6 +1,9 @@
 //! Tests for error handling
 
-use native_api_1c_core::interface::{AddInWrapper, ParamValue, ParamValues};
+use native_api_1c_core::{
+    errors::{NativeApiError, PropertyError, MethodError},
+    interface::{AddInWrapper, ParamValue, ParamValues},
+};
 
 /// Mock AddIn that can simulate errors
 struct ErrorProneAddIn {
@@ -84,17 +87,17 @@ impl AddInWrapper for ErrorProneAddIn {
         }
     }
 
-    fn get_prop_val(&self, _num: usize) -> Result<ParamValue, ()> {
+    fn get_prop_val(&self, _num: usize) -> Result<ParamValue, NativeApiError> {
         if self.should_fail_props {
-            Err(())
+            Err(PropertyError::not_readable(_num).into())
         } else {
             Ok(ParamValue::I32(42))
         }
     }
 
-    fn set_prop_val(&mut self, _num: usize, _val: ParamValue) -> Result<(), ()> {
+    fn set_prop_val(&mut self, _num: usize, _val: ParamValue) -> Result<(), NativeApiError> {
         if self.should_fail_props {
-            Err(())
+            Err(PropertyError::not_writable(_num).into())
         } else {
             Ok(())
         }
@@ -158,17 +161,17 @@ impl AddInWrapper for ErrorProneAddIn {
         !self.should_fail_methods
     }
 
-    fn call_as_proc(&mut self, _method_num: usize, _params: &mut ParamValues) -> Result<(), ()> {
+    fn call_as_proc(&mut self, _method_num: usize, _params: &mut ParamValues) -> Result<(), NativeApiError> {
         if self.should_fail_methods {
-            Err(())
+            Err(MethodError::ExecutionFailed { message: "Method execution failed".to_string() }.into())
         } else {
             Ok(())
         }
     }
 
-    fn call_as_func(&mut self, _method_num: usize, _params: &mut ParamValues) -> Result<ParamValue, ()> {
+    fn call_as_func(&mut self, _method_num: usize, _params: &mut ParamValues) -> Result<ParamValue, NativeApiError> {
         if self.should_fail_methods {
-            Err(())
+            Err(MethodError::ExecutionFailed { message: "Method execution failed".to_string() }.into())
         } else {
             Ok(ParamValue::I32(42))
         }

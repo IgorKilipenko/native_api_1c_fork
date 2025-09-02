@@ -7,6 +7,8 @@
 //! While it is possible to use this crate to implement your Native API
 //! Component, it is intended to be used with native_api_1c crate.
 
+/// Module for error types and error handling
+pub mod errors;
 /// Module for implementations of Native API FFI
 pub mod ffi;
 /// Module for high level interface of Native API

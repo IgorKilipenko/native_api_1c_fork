@@ -1,5 +1,13 @@
+//! High level interface for working with Native API from Rust
+//! 
+//! TODO: Фаза рефакторинга
+//! - [x] Улучшение системы ошибок (создан модуль errors.rs)
+//! - [ ] Упрощение атрибутов (следующий этап)
+//! - [ ] Рефакторинг макросов (финальный этап)
+
 use std::ops::{Index, IndexMut};
 
+use crate::errors::{NativeApiError, NativeApiResult, PropertyError, MethodError, ParameterError};
 use crate::ffi::{connection::Connection, provided_types::Tm};
 
 /// Represents 1C variant values for parameters in safe Rust code.
@@ -102,7 +110,7 @@ impl IndexMut<usize> for ParamValues {
     }
 }
 
-pub type AddInWrapperResult<T> = Result<T, ()>;
+pub type AddInWrapperResult<T> = NativeApiResult<T>;
 
 /// `AddInWrapper` trait is used to implement the 1C AddIn interface,
 /// and is used in FFI to get necessary information about the AddIn

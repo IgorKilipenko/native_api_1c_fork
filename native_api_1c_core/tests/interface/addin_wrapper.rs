@@ -2,6 +2,7 @@
 
 use std::sync::Arc;
 use native_api_1c_core::{
+    errors::NativeApiError,
     ffi::connection::Connection,
     interface::{AddInWrapper, ParamValue, ParamValues},
 };
@@ -59,27 +60,27 @@ impl AddInWrapper for TestAddIn {
         })
     }
 
-    fn get_prop_val(&self, num: usize) -> Result<ParamValue, ()> {
+    fn get_prop_val(&self, num: usize) -> Result<ParamValue, NativeApiError> {
         self.properties.get(num)
             .filter(|(_, _, readable, _)| *readable)
             .map(|(_, value, _, _)| value.clone())
-            .ok_or(())
+            .ok_or(NativeApiError::operation("Property not readable"))
     }
 
-    fn set_prop_val(&mut self, num: usize, val: ParamValue) -> Result<(), ()> {
+    fn set_prop_val(&mut self, num: usize, val: ParamValue) -> Result<(), NativeApiError> {
         if let Some((_, _, _, writable)) = self.properties.get(num) {
             if *writable {
                 if let Some((_, ref mut value, _, _)) = self.properties.get_mut(num) {
                     *value = val;
                     Ok(())
                 } else {
-                    Err(())
+                    Err(NativeApiError::operation("Operation failed"))
                 }
             } else {
-                Err(())
+                Err(NativeApiError::operation("Operation failed"))
             }
         } else {
-            Err(())
+            Err(NativeApiError::operation("Operation failed"))
         }
     }
 
@@ -118,23 +119,23 @@ impl AddInWrapper for TestAddIn {
         self.methods.get(method_num).map(|(_, _, has_return)| *has_return).unwrap_or(false)
     }
 
-    fn call_as_proc(&mut self, method_num: usize, _params: &mut ParamValues) -> Result<(), ()> {
+    fn call_as_proc(&mut self, method_num: usize, _params: &mut ParamValues) -> Result<(), NativeApiError> {
         if method_num < self.methods.len() {
             Ok(()) // Valid method
         } else {
-            Err(()) // Invalid method number
+            Err(NativeApiError::operation("Operation failed")) // Invalid method number
         }
     }
 
-    fn call_as_func(&mut self, method_num: usize, _params: &mut ParamValues) -> Result<ParamValue, ()> {
+    fn call_as_func(&mut self, method_num: usize, _params: &mut ParamValues) -> Result<ParamValue, NativeApiError> {
         if let Some((_, _, has_return)) = self.methods.get(method_num) {
             if *has_return {
                 Ok(ParamValue::I32(42)) // Return test value
             } else {
-                Err(()) // Procedure has no return value
+                Err(NativeApiError::operation("Operation failed")) // Procedure has no return value
             }
         } else {
-            Err(()) // Invalid method number
+            Err(NativeApiError::operation("Operation failed")) // Invalid method number
         }
     }
 
@@ -175,7 +176,7 @@ fn test_addin_wrapper_properties() {
     // Test property values
     assert_eq!(addin.get_prop_val(0), Ok(ParamValue::I32(42)));
     assert_eq!(addin.get_prop_val(1), Ok(ParamValue::Bool(true)));
-    assert_eq!(addin.get_prop_val(2), Err(())); // Write-only property
+    assert_eq!(addin.get_prop_val(2), Err(NativeApiError::operation("Property not readable"))); // Write-only property
     
     // Test property permissions
     assert!(addin.is_prop_readable(0));
