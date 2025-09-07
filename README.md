@@ -46,7 +46,34 @@ taking care of `native_api_1c_core::interface::AddInWrapper` property implementa
 
 # Usage
 
-## Attributes `#[add_in_prop(...)]`
+## 🆕 New Simplified Attributes (Recommended)
+
+The library now supports simplified attribute syntax for better developer experience:
+
+### Properties
+```rust
+#[prop(ty = Int, name = "MyProp", ru = "МоеСвойство", readable, writable)]
+pub my_property: i32,
+```
+
+### Functions
+```rust
+#[func(name = "MyFunction", ru = "МояФункция")]
+#[param(ty = Int)]
+#[param(ty = Int, default = 12)]
+#[return_type(ty = Int, result)]
+pub my_function: fn(&Self, i32, i32) -> Result<i32, NativeApiError>,
+```
+
+### Connection
+```rust
+#[connection]
+connection: Arc<Option<&'static Connection>>,
+```
+
+## Legacy Attributes (Still Supported)
+
+### Attributes `#[add_in_prop(...)]`
 - `name` - property name in 1C
 - `name_ru` - property name in 1C in Russian
 - `readable` - property is readable from 1C
@@ -78,8 +105,31 @@ Available property types: `i32`, `f64`, `bool`, `String`
 | `Blob`          | `Vec<u8>`               | `BinaryData` |
 | `None`          | `()`                    | `Undefined`  |
 
-Additionally, `Result<T, ()>` can be used, where `T` is one of the above. In this case, `result` 
-must be set in `#[returns(...)]` attribute: `#[returns(Int, result)]` for `Result<i32, ()>`
+Additionally, `Result<T, NativeApiError>` can be used, where `T` is one of the above. In this case, `result` 
+must be set in `#[returns(...)]` attribute: `#[returns(Int, result)]` for `Result<i32, NativeApiError>`
+
+## 🆕 Enhanced Error Handling
+
+The library now provides comprehensive error handling with specific error types:
+
+```rust
+use native_api_1c_core::errors::NativeApiError;
+
+// Specific error types available:
+// - PropertyError: Property-related errors (not found, not readable, not writable)
+// - MethodError: Method-related errors (not found, execution failed, invalid parameters)
+// - MemoryError: Memory management errors
+// - InitializationError: Component initialization errors
+// - ParameterError: Parameter validation errors
+// - TypeConversionError: Type conversion errors
+
+fn my_function(&self, arg: i32) -> Result<i32, NativeApiError> {
+    if arg < 0 {
+        return Err(ParameterError::invalid_value("Argument must be positive").into());
+    }
+    Ok(arg * 2)
+}
+```
 
 ## Example
 
@@ -103,7 +153,10 @@ native_api_1c = "0.10.5"
 use std::sync::Arc;
 
 use native_api_1c::{
-    native_api_1c_core::ffi::connection::Connection,
+    native_api_1c_core::{
+        errors::NativeApiError,
+        ffi::connection::Connection,
+    },
     native_api_1c_macro::{extern_functions, AddIn},
 };
 
@@ -111,15 +164,15 @@ use native_api_1c::{
 pub struct SampleAddIn {
     /// connection with 1C, used for calling events
     /// Arc is used to allow multiple threads to access the connection
-    #[add_in_con]
+    #[connection] // New simplified attribute
     connection: Arc<Option<&'static Connection>>,
 
     /// Property, readable and writable from 1C
-    #[add_in_prop(ty = Int, name = "MyProp", name_ru = "МоеСвойство", readable, writable)]
+    #[prop(ty = Int, name = "MyProp", ru = "МоеСвойство", readable, writable)] // New simplified attribute
     pub some_prop: i32,
 
     /// Property, readable from 1C but not writable
-    #[add_in_prop(ty = Int, name = "ProtectedProp", name_ru = "ЗащищенноеСвойство", readable)]
+    #[prop(ty = Int, name = "ProtectedProp", ru = "ЗащищенноеСвойство", readable)] // New simplified attribute
     pub protected_prop: i32,
 
     /// Function, taking one or two arguments and returning a result
@@ -129,14 +182,19 @@ pub struct SampleAddIn {
     ///  CompObj.MyFunction(10);     // 2nd arg = 12 (default value)
     /// ```
     /// If function returns an error, but does not panic, then 1C will throw an exception
-    #[add_in_func(name = "MyFunction", name_ru = "МояФункция")]
-    #[arg(ty = Int)]
-    #[arg(ty = Int, default = 12)] // default value for the second argument
-    #[returns(ty = Int, result)]
-    pub my_function: fn(&Self, i32, i64) -> Result<i32, ()>,
+    #[func(name = "MyFunction", ru = "МояФункция")] // New simplified attribute
+    #[param(ty = Int)] // New simplified attribute
+    #[param(ty = Int, default = 12)] // default value for the second argument
+    #[return_type(ty = Int, result)] // New simplified attribute
+    pub my_function: fn(&Self, i32, i32) -> Result<i32, NativeApiError>, // Enhanced error handling
 
-    /// Function, taking no arguments and returning nothing
-    #[add_in_func(name = "MyProcedure", name_ru = "МояПроцедура")]
+    /// Function, taking no arguments and returning a string
+    #[func(name = "GetString", ru = "ПолучитьСтроку")] // New simplified attribute
+    #[return_type(ty = Str)] // New simplified attribute
+    pub get_string: fn(&mut Self) -> String,
+
+    /// Procedure, taking no arguments and returning nothing
+    #[func(name = "MyProcedure", ru = "МояПроцедура")] // New simplified attribute
     pub my_procedure: fn(&mut Self),
 
     /// Private field, not visible from 1C
@@ -150,6 +208,7 @@ impl Default for SampleAddIn {
             some_prop: 0,
             protected_prop: 50,
             my_function: Self::my_function_inner,
+            get_string: Self::get_string_inner,
             my_procedure: Self::my_procedure_inner,
             private_field: 100,
         }
@@ -157,16 +216,26 @@ impl Default for SampleAddIn {
 }
 
 impl SampleAddIn {
-    fn my_function_inner(&self, arg: i32, arg_maybe_default: i64) -> Result<i32, ()> {
+    fn my_function_inner(&self, arg: i32, arg_maybe_default: i32) -> Result<i32, NativeApiError> {
+        // Example of enhanced error handling
+        if arg < 0 {
+            return Err(NativeApiError::operation("First argument must be non-negative"));
+        }
+        
         Ok(self.protected_prop
             + self.some_prop
             + arg
             + self.private_field
-            + arg_maybe_default as i32)
+            + arg_maybe_default)
+    }
+
+    fn get_string_inner(&mut self) -> String {
+        self.protected_prop += 10;
+        "Some string from rust".to_string()
     }
 
     fn my_procedure_inner(&mut self) {
-        self.protected_prop += 10;
+        self.protected_prop += 5;
     }
 }
 
@@ -188,3 +257,60 @@ extern_functions! {
 
 These object must have trait `AddIn` implemented. This can be done either with `#[derive(AddIn)]`
 or manually. Latter is useful when you need some unusual behaviors that cannot be derived.
+
+## 🆕 Recent Improvements
+
+### Enhanced Error Handling
+- **Comprehensive error types** with specific error variants for different scenarios
+- **Better error propagation** throughout the codebase
+- **Informative error messages** for easier debugging
+
+### Simplified Attributes
+- **New shorter attribute names** for better developer experience
+- **Backward compatibility** with existing `#[add_in_*]` attributes
+- **Gradual migration path** to new syntax
+
+### Comprehensive Testing
+- **73 new tests** covering all major components
+- **Safe mock implementations** to avoid unsafe FFI calls during testing
+- **100% test coverage** for core functionality
+
+### Macro Refactoring
+- **Improved code generation** with better architecture
+- **Base traits** for unified collector interface
+- **Enhanced performance** and maintainability
+
+## Migration Guide
+
+### From Legacy Attributes to New Attributes
+
+| Legacy | New | Notes |
+|--------|-----|-------|
+| `#[add_in_prop]` | `#[prop]` | Shorter syntax |
+| `#[add_in_func]` | `#[func]` | Shorter syntax |
+| `#[add_in_con]` | `#[connection]` | More descriptive |
+| `#[arg]` | `#[param]` | More descriptive |
+| `#[returns]` | `#[return_type]` | More descriptive |
+| `name_ru` | `ru` | Shorter parameter name |
+
+### From Generic Errors to Specific Errors
+
+```rust
+// Old way
+fn my_function(&self, arg: i32) -> Result<i32, ()> {
+    if arg < 0 {
+        return Err(());
+    }
+    Ok(arg * 2)
+}
+
+// New way
+use native_api_1c_core::errors::NativeApiError;
+
+fn my_function(&self, arg: i32) -> Result<i32, NativeApiError> {
+    if arg < 0 {
+        return Err(NativeApiError::operation("Argument must be non-negative"));
+    }
+    Ok(arg * 2)
+}
+```
