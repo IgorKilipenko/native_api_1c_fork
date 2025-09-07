@@ -267,11 +267,6 @@ impl<'a> From<&'a TVariant> for ParamValue {
                 VariantType::Error => ParamValue::Error(param.value.error),
                 VariantType::HResult => ParamValue::HResult(param.value.hresult),
                 VariantType::ClsID => ParamValue::ClsId(param.value.cls_id),
-                VariantType::Variant => {
-                    // Для вложенных вариантов нужна дополнительная обработка
-                    // Пока возвращаем Empty, позже добавим полную поддержку
-                    ParamValue::Empty
-                },
                 _ => ParamValue::Empty,
             }
         }
@@ -294,7 +289,6 @@ pub enum VariantType {
     Interface, //struct iface
     Error,     //int32_t errCode
     Bool,      //bool
-    Variant,   //struct _tVariant *
     Int8,      //int8_t
     UInt8,     //uint8_t
     UInt16,    //uint16_t
@@ -561,11 +555,6 @@ impl TVariant {
             ParamValue::Error(v) => self.update_to_error(*v),
             ParamValue::HResult(v) => self.update_to_hresult(*v),
             ParamValue::ClsId(v) => self.update_to_cls_id(*v),
-            ParamValue::Variant(v) => {
-                // Для вложенных вариантов нужна рекурсивная обработка
-                // Пока устанавливаем Empty, позже добавим полную поддержку
-                self.vt = VariantType::Empty;
-            }
         }
     }
 }

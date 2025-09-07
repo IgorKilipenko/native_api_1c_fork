@@ -58,8 +58,6 @@ pub enum ParamValue {
     HResult(i32),
     /// UUID/GUID (16 bytes)
     ClsId([u8; 16]),
-    /// Nested variant
-    Variant(Box<ParamValue>),
 }
 
 impl ParamValue {
@@ -144,10 +142,6 @@ impl ParamValue {
     pub fn set_cls_id(&mut self, val: [u8; 16]) {
         *self = Self::ClsId(val);
     }
-
-    pub fn set_variant(&mut self, val: ParamValue) {
-        *self = Self::Variant(Box::new(val));
-    }
 }
 
 impl PartialEq for ParamValue {
@@ -176,7 +170,6 @@ impl PartialEq for ParamValue {
             (Self::Error(a), Self::Error(b)) => a == b,
             (Self::HResult(a), Self::HResult(b)) => a == b,
             (Self::ClsId(a), Self::ClsId(b)) => a == b,
-            (Self::Variant(a), Self::Variant(b)) => a == b,
             
             _ => false,
         }
