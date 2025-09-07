@@ -9,6 +9,75 @@
 
 Библиотека теперь поддерживает упрощенный синтаксис атрибутов для лучшего опыта разработки:
 
+## 🆕 Новые VARIANT типы
+
+Библиотека поддерживает все типы данных 1C Native API:
+
+### Базовые типы
+```rust
+#[prop(ty = Bool, name = "MyBool")]
+pub my_bool: bool,
+
+#[prop(ty = Int32, name = "MyInt32")]
+pub my_int32: i32,
+
+#[prop(ty = Double, name = "MyDouble")]
+pub my_double: f64,
+
+#[prop(ty = Date, name = "MyDate")]
+pub my_date: f64, // Windows DATE format
+```
+
+### Расширенные целочисленные типы
+```rust
+#[prop(ty = I8, name = "MyI8")]
+pub my_i8: i8,
+
+#[prop(ty = I16, name = "MyI16")]
+pub my_i16: i16,
+
+#[prop(ty = I64, name = "MyI64")]
+pub my_i64: i64,
+
+#[prop(ty = U8, name = "MyU8")]
+pub my_u8: u8,
+
+#[prop(ty = U16, name = "MyU16")]
+pub my_u16: u16,
+
+#[prop(ty = U32, name = "MyU32")]
+pub my_u32: u32,
+
+#[prop(ty = U64, name = "MyU64")]
+pub my_u64: u64,
+```
+
+### Числа с плавающей точкой
+```rust
+#[prop(ty = F32, name = "MyF32")]
+pub my_f32: f32,
+```
+
+### Специальные типы
+```rust
+#[prop(ty = Error, name = "MyError")]
+pub my_error: i32,
+
+#[prop(ty = ClsId, name = "MyClsId")]
+pub my_cls_id: [u8; 16], // UUID/GUID
+```
+
+### Специальные значения
+```rust
+// Пустое значение (неопределенное)
+#[prop(ty = Empty, name = "MyEmpty")]
+pub my_empty: (),
+
+// NULL значение
+#[prop(ty = Null, name = "MyNull")]
+pub my_null: (),
+```
+
 ### Свойства
 ```rust
 #[prop(ty = Int, name = "MyProp", ru = "МоеСвойство", readable, writable)]
@@ -28,6 +97,73 @@ pub my_function: fn(&Self, i32, i32) -> Result<i32, NativeApiError>,
 ```rust
 #[connection]
 connection: Arc<Option<&'static Connection>>,
+```
+
+## 🛡️ Безопасные обертки
+
+### SafeVariant
+Безопасная работа с TVariant:
+
+```rust
+use native_api_1c_core::safe_wrappers::SafeVariant;
+
+// Создание и работа с различными типами
+let mut variant = SafeVariant::new();
+
+// Булевы значения
+variant.set_bool(true);
+assert_eq!(variant.get_bool().unwrap(), true);
+
+// Целые числа
+variant.set_i32(42);
+assert_eq!(variant.get_i32().unwrap(), 42);
+
+// Числа с плавающей точкой
+variant.set_f64(3.14159);
+assert_eq!(variant.get_f64().unwrap(), 3.14159);
+
+// Даты
+variant.set_date(44197.0);
+assert_eq!(variant.get_date().unwrap(), 44197.0);
+
+// Коды ошибок
+variant.set_error(1001);
+assert_eq!(variant.get_error().unwrap(), 1001);
+
+// CLSID (UUID/GUID)
+let cls_id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+variant.set_cls_id(cls_id);
+assert_eq!(variant.get_cls_id().unwrap(), cls_id);
+
+// NULL значения
+variant.set_null();
+assert!(variant.is_null());
+```
+
+### SafeVariantArray
+Безопасная работа с массивами TVariant:
+
+```rust
+use native_api_1c_core::safe_wrappers::{SafeVariant, SafeVariantArray};
+
+let mut array = SafeVariantArray::new();
+
+// Добавление элементов
+let mut variant1 = SafeVariant::new();
+variant1.set_i32(100);
+array.push(variant1);
+
+let mut variant2 = SafeVariant::new();
+variant2.set_bool(true);
+array.push(variant2);
+
+// Получение элементов
+assert_eq!(array.len(), 2);
+let first = array.get(0).unwrap();
+assert_eq!(first.get_i32().unwrap(), 100);
+
+let second = array.get(1).unwrap();
+assert_eq!(second.get_bool().unwrap(), true);
 ```
 
 ## Устаревшие атрибуты (все еще поддерживаются)

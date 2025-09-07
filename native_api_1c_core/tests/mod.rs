@@ -5,3 +5,5 @@ mod interface;
 mod memory;
 mod error_handling;
 mod variant_types;
+mod safe_wrappers;
+mod performance_tests;

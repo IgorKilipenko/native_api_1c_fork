@@ -10,7 +10,6 @@ struct TestNewVariantTypes {
     pub test_i64: i64,
     pub test_f32: f32,
     pub test_error: i32,
-    pub test_hresult: i32,
     pub test_cls_id: [u8; 16],
 }
 
@@ -34,10 +33,6 @@ impl TestNewVariantTypes {
     
     pub fn get_error(&self) -> Result<i32, NativeApiError> {
         Ok(self.test_error)
-    }
-    
-    pub fn get_hresult(&self) -> Result<i32, NativeApiError> {
-        Ok(self.test_hresult)
     }
     
     pub fn get_cls_id(&self) -> Result<[u8; 16], NativeApiError> {
@@ -70,11 +65,6 @@ impl TestNewVariantTypes {
         Ok(())
     }
     
-    pub fn set_hresult(&mut self, value: i32) -> Result<(), NativeApiError> {
-        self.test_hresult = value;
-        Ok(())
-    }
-    
     pub fn set_cls_id(&mut self, value: [u8; 16]) -> Result<(), NativeApiError> {
         self.test_cls_id = value;
         Ok(())
@@ -89,7 +79,6 @@ impl Default for TestNewVariantTypes {
             test_i64: 9223372036854775807,
             test_f32: 3.14f32,
             test_error: -2147024809, // E_INVALIDARG
-            test_hresult: 0x80004005u32 as i32, // E_FAIL
             test_cls_id: [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 
                          0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0],
         }
@@ -110,7 +99,6 @@ mod tests {
         assert_eq!(addin.test_i64, 9223372036854775807);
         assert_eq!(addin.test_f32, 3.14f32);
         assert_eq!(addin.test_error, -2147024809);
-        assert_eq!(addin.test_hresult, 0x80004005u32 as i32);
         assert_eq!(addin.test_cls_id, [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 
                                       0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0]);
     }
@@ -125,7 +113,6 @@ mod tests {
         assert_eq!(addin.get_i64().unwrap(), 9223372036854775807);
         assert_eq!(addin.get_f32().unwrap(), 3.14f32);
         assert_eq!(addin.get_error().unwrap(), -2147024809);
-        assert_eq!(addin.get_hresult().unwrap(), 0x80004005u32 as i32);
         assert_eq!(addin.get_cls_id().unwrap(), [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 
                                                 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0]);
     }
@@ -150,9 +137,6 @@ mod tests {
         addin.set_error(0).unwrap();
         assert_eq!(addin.test_error, 0);
         
-        addin.set_hresult(0).unwrap();
-        assert_eq!(addin.test_hresult, 0);
-        
         let new_uuid = [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 
                        0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff];
         addin.set_cls_id(new_uuid).unwrap();
@@ -167,7 +151,6 @@ mod tests {
         let i64_val = ParamValue::I64(9223372036854775807);
         let f32_val = ParamValue::F32(3.14f32);
         let error_val = ParamValue::Error(-2147024809);
-        let hresult_val = ParamValue::HResult(0x80004005u32 as i32);
         let cls_id_val = ParamValue::ClsId([0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 
                                            0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0]);
         
@@ -195,11 +178,6 @@ mod tests {
         match error_val {
             ParamValue::Error(v) => assert_eq!(v, -2147024809),
             _ => panic!("Expected Error"),
-        }
-        
-        match hresult_val {
-            ParamValue::HResult(v) => assert_eq!(v, 0x80004005u32 as i32),
-            _ => panic!("Expected HResult"),
         }
         
         match cls_id_val {

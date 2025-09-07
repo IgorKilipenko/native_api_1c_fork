@@ -13,3 +13,5 @@ pub mod errors;
 pub mod ffi;
 /// Module for high level interface of Native API
 pub mod interface;
+/// Module for safe wrappers around TVariant
+pub mod safe_wrappers;

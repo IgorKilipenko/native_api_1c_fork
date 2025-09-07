@@ -55,7 +55,6 @@ pub enum ParamValue {
     /// Error code
     Error(i32),
     /// HRESULT code
-    HResult(i32),
     /// UUID/GUID (16 bytes)
     ClsId([u8; 16]),
 }
@@ -135,9 +134,6 @@ impl ParamValue {
         *self = Self::Error(val);
     }
 
-    pub fn set_hresult(&mut self, val: i32) {
-        *self = Self::HResult(val);
-    }
 
     pub fn set_cls_id(&mut self, val: [u8; 16]) {
         *self = Self::ClsId(val);
@@ -168,7 +164,6 @@ impl PartialEq for ParamValue {
             (Self::DateDouble(a), Self::DateDouble(b)) => a == b,
             (Self::AnsiString(a), Self::AnsiString(b)) => a == b,
             (Self::Error(a), Self::Error(b)) => a == b,
-            (Self::HResult(a), Self::HResult(b)) => a == b,
             (Self::ClsId(a), Self::ClsId(b)) => a == b,
             
             _ => false,

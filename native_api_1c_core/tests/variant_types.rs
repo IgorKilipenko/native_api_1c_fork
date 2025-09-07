@@ -136,14 +136,6 @@ mod new_types {
     }
 
     #[test]
-    fn test_vtype_hresult() {
-        let mut variant = TVariant::default();
-        variant.update_to_hresult(0x80004005u32 as i32); // E_FAIL
-        assert_eq!(variant.vt, VariantType::HResult);
-        assert_eq!(unsafe { variant.value.hresult }, 0x80004005u32 as i32);
-    }
-
-    #[test]
     fn test_vtype_cls_id() {
         let mut variant = TVariant::default();
         let uuid = [0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0, 

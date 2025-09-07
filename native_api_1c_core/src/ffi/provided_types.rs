@@ -265,7 +265,6 @@ impl<'a> From<&'a TVariant> for ParamValue {
                     .into(),
                 ),
                 VariantType::Error => ParamValue::Error(param.value.error),
-                VariantType::HResult => ParamValue::HResult(param.value.hresult),
                 VariantType::ClsID => ParamValue::ClsId(param.value.cls_id),
                 _ => ParamValue::Empty,
             }
@@ -275,7 +274,7 @@ impl<'a> From<&'a TVariant> for ParamValue {
 
 #[repr(u16)]
 #[allow(dead_code)]
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub enum VariantType {
     Empty = 0,
     Null,
@@ -297,7 +296,6 @@ pub enum VariantType {
     UInt64,    //uint64_t
     Int,       //int   Depends on architecture
     UInt,      //unsigned int  Depends on architecture
-    HResult,   //long hRes
     WStr,      //struct wstr
     Blob,      //means in struct str binary data contain
     ClsID,     //UUID
@@ -363,7 +361,6 @@ pub union VariantValue {
     pub date: f64,  // Windows DATE format
     pub tm: Tm,
     pub error: i32,
-    pub hresult: i32,
     pub data_str: DataStr,
     pub data_blob: DataBlob,
     pub cls_id: [u8; 16], // UUID/GUID
@@ -510,10 +507,6 @@ impl TVariant {
         self.vt = VariantType::Error;
     }
 
-    pub fn update_to_hresult(&mut self, v: i32) {
-        self.value.hresult = v;
-        self.vt = VariantType::HResult;
-    }
 
     pub fn update_to_cls_id(&mut self, v: [u8; 16]) {
         self.value.cls_id = v;
@@ -553,7 +546,6 @@ impl TVariant {
                 let _ = unsafe { self.update_to_blob(mem_mngr, v.as_slice()) };
             }
             ParamValue::Error(v) => self.update_to_error(*v),
-            ParamValue::HResult(v) => self.update_to_hresult(*v),
             ParamValue::ClsId(v) => self.update_to_cls_id(*v),
         }
     }
