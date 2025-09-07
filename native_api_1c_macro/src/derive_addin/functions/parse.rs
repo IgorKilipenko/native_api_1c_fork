@@ -207,12 +207,27 @@ impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
         let allowed_defaults = match arg_meta.ty.clone() {
             FuncParamType::SelfType => false,
             FuncParamType::PlatformType(ty) => match ty {
+                // Базовые типы
                 ParamType::Bool => true,
                 ParamType::I32 => true,
                 ParamType::F64 => true,
                 ParamType::String => true,
                 ParamType::Date => false,
                 ParamType::Blob => false,
+                
+                // Дополнительные типы
+                ParamType::Null => false,
+                ParamType::I8 => true,
+                ParamType::I16 => true,
+                ParamType::I64 => true,
+                ParamType::U8 => true,
+                ParamType::U16 => true,
+                ParamType::U32 => true,
+                ParamType::U64 => true,
+                ParamType::F32 => true,
+                ParamType::Error => true,
+                ParamType::HResult => true,
+                ParamType::ClsId => false,
             },
         };
 

@@ -4,3 +4,4 @@ mod ffi;
 mod interface;
 mod memory;
 mod error_handling;
+mod variant_types;

@@ -17,9 +17,9 @@ pub enum ParamValue {
     Empty,
     /// Boolean value
     Bool(bool),
-    /// Integer value
+    /// Integer value (32-bit)
     I32(i32),
-    /// Float value
+    /// Float value (64-bit)
     F64(f64),
     /// Date-time value
     Date(Tm),
@@ -27,6 +27,39 @@ pub enum ParamValue {
     String(Vec<u16>),
     /// Blob value
     Blob(Vec<u8>),
+    
+    // Новые типы для полной поддержки VARIANT
+    
+    /// NULL value
+    Null,
+    /// 8-bit signed integer
+    I8(i8),
+    /// 16-bit signed integer
+    I16(i16),
+    /// 64-bit signed integer
+    I64(i64),
+    /// 8-bit unsigned integer
+    U8(u8),
+    /// 16-bit unsigned integer
+    U16(u16),
+    /// 32-bit unsigned integer
+    U32(u32),
+    /// 64-bit unsigned integer
+    U64(u64),
+    /// 32-bit float value
+    F32(f32),
+    /// Date value in Windows DATE format (f64)
+    DateDouble(f64),
+    /// ANSI string value
+    AnsiString(Vec<u8>),
+    /// Error code
+    Error(i32),
+    /// HRESULT code
+    HResult(i32),
+    /// UUID/GUID (16 bytes)
+    ClsId([u8; 16]),
+    /// Nested variant
+    Variant(Box<ParamValue>),
 }
 
 impl ParamValue {
@@ -53,6 +86,68 @@ impl ParamValue {
     pub fn set_blob(&mut self, val: Vec<u8>) {
         *self = Self::Blob(val);
     }
+
+    // Методы для новых типов
+
+    pub fn set_null(&mut self) {
+        *self = Self::Null;
+    }
+
+    pub fn set_i8(&mut self, val: i8) {
+        *self = Self::I8(val);
+    }
+
+    pub fn set_i16(&mut self, val: i16) {
+        *self = Self::I16(val);
+    }
+
+    pub fn set_i64(&mut self, val: i64) {
+        *self = Self::I64(val);
+    }
+
+    pub fn set_u8(&mut self, val: u8) {
+        *self = Self::U8(val);
+    }
+
+    pub fn set_u16(&mut self, val: u16) {
+        *self = Self::U16(val);
+    }
+
+    pub fn set_u32(&mut self, val: u32) {
+        *self = Self::U32(val);
+    }
+
+    pub fn set_u64(&mut self, val: u64) {
+        *self = Self::U64(val);
+    }
+
+    pub fn set_f32(&mut self, val: f32) {
+        *self = Self::F32(val);
+    }
+
+    pub fn set_date_double(&mut self, val: f64) {
+        *self = Self::DateDouble(val);
+    }
+
+    pub fn set_ansi_string(&mut self, val: Vec<u8>) {
+        *self = Self::AnsiString(val);
+    }
+
+    pub fn set_error(&mut self, val: i32) {
+        *self = Self::Error(val);
+    }
+
+    pub fn set_hresult(&mut self, val: i32) {
+        *self = Self::HResult(val);
+    }
+
+    pub fn set_cls_id(&mut self, val: [u8; 16]) {
+        *self = Self::ClsId(val);
+    }
+
+    pub fn set_variant(&mut self, val: ParamValue) {
+        *self = Self::Variant(Box::new(val));
+    }
 }
 
 impl PartialEq for ParamValue {
@@ -65,6 +160,24 @@ impl PartialEq for ParamValue {
             (Self::Date(a), Self::Date(b)) => a == b,
             (Self::String(a), Self::String(b)) => a == b,
             (Self::Blob(a), Self::Blob(b)) => a == b,
+            
+            // Новые типы
+            (Self::Null, Self::Null) => true,
+            (Self::I8(a), Self::I8(b)) => a == b,
+            (Self::I16(a), Self::I16(b)) => a == b,
+            (Self::I64(a), Self::I64(b)) => a == b,
+            (Self::U8(a), Self::U8(b)) => a == b,
+            (Self::U16(a), Self::U16(b)) => a == b,
+            (Self::U32(a), Self::U32(b)) => a == b,
+            (Self::U64(a), Self::U64(b)) => a == b,
+            (Self::F32(a), Self::F32(b)) => a == b,
+            (Self::DateDouble(a), Self::DateDouble(b)) => a == b,
+            (Self::AnsiString(a), Self::AnsiString(b)) => a == b,
+            (Self::Error(a), Self::Error(b)) => a == b,
+            (Self::HResult(a), Self::HResult(b)) => a == b,
+            (Self::ClsId(a), Self::ClsId(b)) => a == b,
+            (Self::Variant(a), Self::Variant(b)) => a == b,
+            
             _ => false,
         }
     }
