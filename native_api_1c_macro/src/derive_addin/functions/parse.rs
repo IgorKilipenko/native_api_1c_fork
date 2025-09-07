@@ -225,6 +225,8 @@ impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
                 ParamType::U32 => true,
                 ParamType::U64 => true,
                 ParamType::F32 => true,
+                ParamType::DateDouble => false,
+                ParamType::AnsiString => true,
                 ParamType::Error => true,
                 ParamType::HResult => true,
                 ParamType::ClsId => false,

@@ -17,6 +17,8 @@ pub const U16_TYPE: &str = "U16";
 pub const U32_TYPE: &str = "U32";
 pub const U64_TYPE: &str = "U64";
 pub const F32_TYPE: &str = "F32";
+pub const DATE_DOUBLE_TYPE: &str = "DateDouble";
+pub const ANSI_STRING_TYPE: &str = "AnsiStr";
 pub const ERROR_TYPE: &str = "Error";
 pub const HRESULT_TYPE: &str = "HResult";
 pub const CLS_ID_TYPE: &str = "ClsId";
@@ -37,6 +39,8 @@ pub const ALL_RETURN_TYPES: &[&str] = &[
     U32_TYPE,
     U64_TYPE,
     F32_TYPE,
+    DATE_DOUBLE_TYPE,
+    ANSI_STRING_TYPE,
     ERROR_TYPE,
     HRESULT_TYPE,
     CLS_ID_TYPE,
@@ -59,6 +63,8 @@ pub const ALL_ARG_TYPES: &[&str] = &[
     U32_TYPE,
     U64_TYPE,
     F32_TYPE,
+    DATE_DOUBLE_TYPE,
+    ANSI_STRING_TYPE,
     ERROR_TYPE,
     HRESULT_TYPE,
     CLS_ID_TYPE,

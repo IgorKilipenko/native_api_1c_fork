@@ -6,9 +6,9 @@ use quote::{quote, ToTokens};
 
 use super::{
     constants::{
-        BLOB_TYPE, BOOL_TYPE, CLS_ID_TYPE, DATE_TYPE, ERROR_TYPE, F32_TYPE, F64_TYPE, HRESULT_TYPE,
-        I16_TYPE, I32_TYPE, I64_TYPE, I8_TYPE, NULL_TYPE, STRING_TYPE, U16_TYPE, U32_TYPE, U64_TYPE,
-        U8_TYPE,
+        ANSI_STRING_TYPE, BLOB_TYPE, BOOL_TYPE, CLS_ID_TYPE, DATE_DOUBLE_TYPE, DATE_TYPE, ERROR_TYPE,
+        F32_TYPE, F64_TYPE, HRESULT_TYPE, I16_TYPE, I32_TYPE, I64_TYPE, I8_TYPE, NULL_TYPE, STRING_TYPE,
+        U16_TYPE, U32_TYPE, U64_TYPE, U8_TYPE,
     },
     parsers::ParamType,
 };
@@ -120,6 +120,8 @@ impl TryFrom<&str> for FuncParamType {
             U32_TYPE => Ok(FuncParamType::PlatformType(ParamType::U32)),
             U64_TYPE => Ok(FuncParamType::PlatformType(ParamType::U64)),
             F32_TYPE => Ok(FuncParamType::PlatformType(ParamType::F32)),
+            DATE_DOUBLE_TYPE => Ok(FuncParamType::PlatformType(ParamType::DateDouble)),
+            ANSI_STRING_TYPE => Ok(FuncParamType::PlatformType(ParamType::AnsiString)),
             ERROR_TYPE => Ok(FuncParamType::PlatformType(ParamType::Error)),
             HRESULT_TYPE => Ok(FuncParamType::PlatformType(ParamType::HResult)),
             CLS_ID_TYPE => Ok(FuncParamType::PlatformType(ParamType::ClsId)),
@@ -181,6 +183,12 @@ impl ToTokens for FuncParamType {
                 }
                 ParamType::F32 => {
                     quote! { native_api_1c::native_api_1c_core::interface::ParamValue::F32 }
+                }
+                ParamType::DateDouble => {
+                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::DateDouble }
+                }
+                ParamType::AnsiString => {
+                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::AnsiString }
                 }
                 ParamType::Error => {
                     quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Error }
