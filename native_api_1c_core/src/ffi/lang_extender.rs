@@ -60,7 +60,7 @@ unsafe extern "system" fn register_extension_as<T: AddInWrapper>(
     name: *mut *mut u16,
 ) -> bool {
     let component = this.get_component();
-    let Some(allocator) = component.memory_manager_ptr else {
+    let Some(allocator) = component.memory else {
         return false;
     };
 
@@ -104,7 +104,7 @@ unsafe extern "system" fn get_prop_name<T: AddInWrapper>(
     alias: c_long,
 ) -> *const u16 {
     let component = this.get_component();
-    let Some(allocator) = component.memory_manager_ptr else {
+    let Some(allocator) = component.memory else {
         return ptr::null();
     };
     let Some(prop_name) =
@@ -126,7 +126,7 @@ unsafe extern "system" fn get_prop_val<T: AddInWrapper>(
     val: &mut TVariant,
 ) -> bool {
     let component = component.get_component();
-    let Some(mem) = component.memory_manager_ptr else {
+    let Some(mem) = component.memory else {
         return false;
     };
 
@@ -190,7 +190,7 @@ unsafe extern "system" fn get_method_name<T: AddInWrapper>(
     alias: c_long,
 ) -> *const u16 {
     let component = this.get_component();
-    let Some(allocator) = component.memory_manager_ptr else {
+    let Some(allocator) = component.memory else {
         return ptr::null();
     };
     let Some(method_name) = component
@@ -227,7 +227,7 @@ unsafe extern "system" fn get_param_def_value<T: AddInWrapper>(
     val: &mut TVariant,
 ) -> bool {
     let component = this.get_component();
-    let Some(mem) = component.memory_manager_ptr else {
+    let Some(mem) = component.memory else {
         return false;
     };
 
@@ -260,7 +260,7 @@ unsafe extern "system" fn call_as_proc<T: AddInWrapper>(
     size_array: c_long,
 ) -> bool {
     let component = this.get_component();
-    let Some(mem_mngr) = component.memory_manager_ptr else {
+    let Some(mem_mngr) = component.memory else {
         return false;
     };
 
@@ -316,7 +316,7 @@ unsafe extern "system" fn call_as_func<T: AddInWrapper>(
     size_array: c_long,
 ) -> bool {
     let component = this.get_component();
-    let Some(mem_mngr) = component.memory_manager_ptr else {
+    let Some(mem_mngr) = component.memory else {
         return false;
     };
 

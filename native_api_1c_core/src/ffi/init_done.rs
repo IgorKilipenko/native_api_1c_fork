@@ -30,7 +30,7 @@ unsafe extern "system" fn set_mem_manager<T: AddInWrapper>(
     mem: &'static MemoryManager,
 ) -> bool {
     let component = this.get_component();
-    component.memory_manager_ptr = Some(mem);
+    component.memory = Some(mem);
     true
 }
 
