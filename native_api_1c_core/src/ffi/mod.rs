@@ -71,21 +71,19 @@ impl<'a, const OFFSET: usize, T: AddInWrapper> This<OFFSET, T> {
 
 #[repr(C)]
 struct Component<T: AddInWrapper> {
-    // 1C Interface
+    // 1C Interface - порядок полей критичен для совместимости с 1С!
     init_done_ptr: Box<InitDoneBaseVTable<T>>,
     lang_extender_ptr: Box<LanguageExtenderBaseVTable<T>>,
     locale_ptr: Box<LocaleBaseVTable<T>>,
     usr_lang_ptr: Box<UserLanguageBaseVTable<T>>,
-
-    // storage for additional interfaces
+    destroy: unsafe extern "system" fn(*mut *mut Component<T>),
     memory_manager_ptr: Option<&'static MemoryManager>,
+    addin: T,
+    
+    // Дополнительные поля - добавляем в конец, чтобы не нарушить совместимость
     connection_ptr: Option<&'static Connection>,
     locale: Option<String>,
     user_interface_language_code: Option<String>,
-
-    // rust part
-    destroy: unsafe extern "system" fn(*mut *mut Component<T>),
-    addin: T,
 }
 
 unsafe extern "system" fn destroy<T: AddInWrapper>(
@@ -107,13 +105,13 @@ pub unsafe fn create_component<T: AddInWrapper>(
         lang_extender_ptr: Default::default(),
         locale_ptr: Default::default(),
         usr_lang_ptr: Default::default(),
-
         destroy: destroy::<T>,
         memory_manager_ptr: Default::default(),
+        addin,
+
         connection_ptr: Default::default(),
         locale: Default::default(),
         user_interface_language_code: Default::default(),
-        addin,
     });
 
     *component = Box::into_raw(c) as *mut c_void;
