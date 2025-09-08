@@ -108,11 +108,12 @@ pub unsafe fn create_component<T: AddInWrapper>(
         locale_ptr: Default::default(),
         usr_lang_ptr: Default::default(),
 
-        destroy: destroy::<T>,
         memory_manager_ptr: Default::default(),
         connection_ptr: Default::default(),
         locale: Default::default(),
         user_interface_language_code: Default::default(),
+
+        destroy: destroy::<T>,
         addin,
     });
 
