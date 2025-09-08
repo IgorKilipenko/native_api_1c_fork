@@ -28,10 +28,8 @@ pub enum ParamValue {
     /// Blob value
     Blob(Vec<u8>),
     
-    // Новые типы для полной поддержки VARIANT
+    // Простые числовые типы
     
-    /// NULL value
-    Null,
     /// 8-bit signed integer
     I8(i8),
     /// 16-bit signed integer
@@ -48,16 +46,6 @@ pub enum ParamValue {
     U64(u64),
     /// 32-bit float value
     F32(f32),
-    /// Date value in Windows DATE format (f64)
-    DateDouble(f64),
-    /// ANSI string value
-    AnsiString(Vec<u8>),
-    /// Error code
-    Error(i32),
-    /// HRESULT code
-    HResult(i32),
-    /// UUID/GUID (16 bytes)
-    ClsId([u8; 16]),
 }
 
 impl ParamValue {
@@ -87,9 +75,6 @@ impl ParamValue {
 
     // Методы для новых типов
 
-    pub fn set_null(&mut self) {
-        *self = Self::Null;
-    }
 
     pub fn set_i8(&mut self, val: i8) {
         *self = Self::I8(val);
@@ -123,25 +108,6 @@ impl ParamValue {
         *self = Self::F32(val);
     }
 
-    pub fn set_date_double(&mut self, val: f64) {
-        *self = Self::DateDouble(val);
-    }
-
-    pub fn set_ansi_string(&mut self, val: Vec<u8>) {
-        *self = Self::AnsiString(val);
-    }
-
-    pub fn set_error(&mut self, val: i32) {
-        *self = Self::Error(val);
-    }
-
-    pub fn set_hresult(&mut self, val: i32) {
-        *self = Self::HResult(val);
-    }
-
-    pub fn set_cls_id(&mut self, val: [u8; 16]) {
-        *self = Self::ClsId(val);
-    }
 }
 
 impl PartialEq for ParamValue {
@@ -155,8 +121,7 @@ impl PartialEq for ParamValue {
             (Self::String(a), Self::String(b)) => a == b,
             (Self::Blob(a), Self::Blob(b)) => a == b,
             
-            // Новые типы
-            (Self::Null, Self::Null) => true,
+            // Простые числовые типы
             (Self::I8(a), Self::I8(b)) => a == b,
             (Self::I16(a), Self::I16(b)) => a == b,
             (Self::I64(a), Self::I64(b)) => a == b,
@@ -165,11 +130,6 @@ impl PartialEq for ParamValue {
             (Self::U32(a), Self::U32(b)) => a == b,
             (Self::U64(a), Self::U64(b)) => a == b,
             (Self::F32(a), Self::F32(b)) => a == b,
-            (Self::DateDouble(a), Self::DateDouble(b)) => a == b,
-            (Self::AnsiString(a), Self::AnsiString(b)) => a == b,
-            (Self::Error(a), Self::Error(b)) => a == b,
-            (Self::HResult(a), Self::HResult(b)) => a == b,
-            (Self::ClsId(a), Self::ClsId(b)) => a == b,
             
             _ => false,
         }

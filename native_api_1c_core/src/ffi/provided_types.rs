@@ -229,7 +229,6 @@ impl<'a> From<&'a TVariant> for ParamValue {
         unsafe {
             match param.vt {
                 VariantType::Empty => ParamValue::Empty,
-                VariantType::Null => ParamValue::Null,
                 VariantType::Bool => ParamValue::Bool(param.value.bool),
                 VariantType::Int8 => ParamValue::I8(param.value.i8),
                 VariantType::Int16 => ParamValue::I16(param.value.i16),
@@ -241,11 +240,11 @@ impl<'a> From<&'a TVariant> for ParamValue {
                 VariantType::UInt64 => ParamValue::U64(param.value.u64),
                 VariantType::Float => ParamValue::F32(param.value.f32),
                 VariantType::Double => ParamValue::F64(param.value.f64),
-                VariantType::Date => ParamValue::DateDouble(param.value.date),
+                VariantType::Date => ParamValue::F64(param.value.date),
                 VariantType::Time => ParamValue::Date(param.value.tm),
-                VariantType::PStr => ParamValue::AnsiString(
+                VariantType::PStr => ParamValue::String(
                     from_raw_parts(
-                        param.value.data_str.ptr as *const u8,
+                        param.value.data_str.ptr as *const u16,
                         param.value.data_str.len as usize,
                     )
                     .into(),
@@ -264,9 +263,6 @@ impl<'a> From<&'a TVariant> for ParamValue {
                     )
                     .into(),
                 ),
-                VariantType::Error => ParamValue::Error(param.value.error),
-                VariantType::HResult => ParamValue::HResult(param.value.hresult),
-                VariantType::ClsID => ParamValue::ClsId(param.value.cls_id),
                 _ => ParamValue::Empty,
             }
         }
@@ -278,7 +274,6 @@ impl<'a> From<&'a TVariant> for ParamValue {
 #[derive(PartialEq, Debug)]
 pub enum VariantType {
     Empty = 0,
-    Null,
     Int16,     //int16_t
     Int32,     //int32_t
     Float,     //float
@@ -287,7 +282,6 @@ pub enum VariantType {
     Time,      //struct tm
     PStr,      //struct str    string
     Interface, //struct iface
-    Error,     //int32_t errCode
     Bool,      //bool
     Int8,      //int8_t
     UInt8,     //uint8_t
@@ -297,10 +291,8 @@ pub enum VariantType {
     UInt64,    //uint64_t
     Int,       //int   Depends on architecture
     UInt,      //unsigned int  Depends on architecture
-    HResult,   //long hRes
     WStr,      //struct wstr
     Blob,      //means in struct str binary data contain
-    ClsID,     //UUID
 
     Undefined = 0xFFFF,
 }
@@ -456,9 +448,6 @@ impl TVariant {
 
     // Новые методы для поддержки дополнительных типов VARIANT
 
-    pub fn update_to_null(&mut self) {
-        self.vt = VariantType::Null;
-    }
 
     pub fn update_to_i8(&mut self, v: i8) {
         self.value.i8 = v;
@@ -500,25 +489,6 @@ impl TVariant {
         self.vt = VariantType::Float;
     }
 
-    pub fn update_to_date_double(&mut self, v: f64) {
-        self.value.date = v;
-        self.vt = VariantType::Date;
-    }
-
-    pub fn update_to_error(&mut self, v: i32) {
-        self.value.error = v;
-        self.vt = VariantType::Error;
-    }
-
-    pub fn update_to_hresult(&mut self, v: i32) {
-        self.value.hresult = v;
-        self.vt = VariantType::HResult;
-    }
-
-    pub fn update_to_cls_id(&mut self, v: [u8; 16]) {
-        self.value.cls_id = v;
-        self.vt = VariantType::ClsID;
-    }
 
     pub fn update_from_return(
         &mut self,
@@ -527,7 +497,6 @@ impl TVariant {
     ) {
         match value {
             ParamValue::Empty => self.vt = VariantType::Empty,
-            ParamValue::Null => self.update_to_null(),
             ParamValue::Bool(v) => self.update_to_bool(*v),
             ParamValue::I8(v) => self.update_to_i8(*v),
             ParamValue::I16(v) => self.update_to_i16(*v),
@@ -540,21 +509,12 @@ impl TVariant {
             ParamValue::F32(v) => self.update_to_f32(*v),
             ParamValue::F64(v) => self.update_to_f64(*v),
             ParamValue::Date(v) => self.update_to_date(*v),
-            ParamValue::DateDouble(v) => self.update_to_date_double(*v),
             ParamValue::String(v) => {
                 let _ = unsafe { self.update_to_str(mem_mngr, v.as_slice()) };
-            }
-            ParamValue::AnsiString(v) => {
-                // Для ANSI строк нужна специальная обработка
-                // Пока используем WStr, позже добавим полную поддержку PStr
-                let _ = unsafe { self.update_to_str(mem_mngr, &[]) };
             }
             ParamValue::Blob(v) => {
                 let _ = unsafe { self.update_to_blob(mem_mngr, v.as_slice()) };
             }
-            ParamValue::Error(v) => self.update_to_error(*v),
-            ParamValue::HResult(v) => self.update_to_hresult(*v),
-            ParamValue::ClsId(v) => self.update_to_cls_id(*v),
         }
     }
 }
