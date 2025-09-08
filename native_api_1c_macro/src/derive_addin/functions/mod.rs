@@ -5,11 +5,7 @@ use proc_macro2::{Ident, TokenStream};
 use quote::{quote, ToTokens};
 
 use super::{
-    constants::{
-        ANSI_STRING_TYPE, BLOB_TYPE, BOOL_TYPE, CLS_ID_TYPE, DATE_DOUBLE_TYPE, DATE_TYPE, ERROR_TYPE,
-        F32_TYPE, F64_TYPE, HRESULT_TYPE, I16_TYPE, I32_TYPE, I64_TYPE, I8_TYPE, NULL_TYPE, STRING_TYPE,
-        U16_TYPE, U32_TYPE, U64_TYPE, U8_TYPE,
-    },
+    constants::{BLOB_TYPE, BOOL_TYPE, DATE_TYPE, F64_TYPE, I32_TYPE, STRING_TYPE},
     parsers::ParamType,
 };
 
@@ -102,31 +98,13 @@ impl TryFrom<&str> for FuncParamType {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            // Базовые типы
             BOOL_TYPE => Ok(FuncParamType::PlatformType(ParamType::Bool)),
             I32_TYPE => Ok(FuncParamType::PlatformType(ParamType::I32)),
             F64_TYPE => Ok(FuncParamType::PlatformType(ParamType::F64)),
             STRING_TYPE => Ok(FuncParamType::PlatformType(ParamType::String)),
             DATE_TYPE => Ok(FuncParamType::PlatformType(ParamType::Date)),
             BLOB_TYPE => Ok(FuncParamType::PlatformType(ParamType::Blob)),
-            
-            // Дополнительные типы
-            NULL_TYPE => Ok(FuncParamType::PlatformType(ParamType::Null)),
-            I8_TYPE => Ok(FuncParamType::PlatformType(ParamType::I8)),
-            I16_TYPE => Ok(FuncParamType::PlatformType(ParamType::I16)),
-            I64_TYPE => Ok(FuncParamType::PlatformType(ParamType::I64)),
-            U8_TYPE => Ok(FuncParamType::PlatformType(ParamType::U8)),
-            U16_TYPE => Ok(FuncParamType::PlatformType(ParamType::U16)),
-            U32_TYPE => Ok(FuncParamType::PlatformType(ParamType::U32)),
-            U64_TYPE => Ok(FuncParamType::PlatformType(ParamType::U64)),
-            F32_TYPE => Ok(FuncParamType::PlatformType(ParamType::F32)),
-            DATE_DOUBLE_TYPE => Ok(FuncParamType::PlatformType(ParamType::DateDouble)),
-            ANSI_STRING_TYPE => Ok(FuncParamType::PlatformType(ParamType::AnsiString)),
-            ERROR_TYPE => Ok(FuncParamType::PlatformType(ParamType::Error)),
-            HRESULT_TYPE => Ok(FuncParamType::PlatformType(ParamType::HResult)),
-            CLS_ID_TYPE => Ok(FuncParamType::PlatformType(ParamType::ClsId)),
-            
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
@@ -136,7 +114,6 @@ impl ToTokens for FuncParamType {
         *tokens = match self {
             FuncParamType::SelfType => panic!("type not supported for selection"),
             FuncParamType::PlatformType(param_type) => match param_type {
-                // Базовые типы
                 ParamType::Bool => {
                     quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Bool }
                 }
@@ -154,50 +131,6 @@ impl ToTokens for FuncParamType {
                 }
                 ParamType::Blob => {
                     quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Blob }
-                }
-                
-                // Дополнительные типы
-                ParamType::Null => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Null }
-                }
-                ParamType::I8 => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::I8 }
-                }
-                ParamType::I16 => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::I16 }
-                }
-                ParamType::I64 => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::I64 }
-                }
-                ParamType::U8 => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::U8 }
-                }
-                ParamType::U16 => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::U16 }
-                }
-                ParamType::U32 => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::U32 }
-                }
-                ParamType::U64 => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::U64 }
-                }
-                ParamType::F32 => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::F32 }
-                }
-                ParamType::DateDouble => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::DateDouble }
-                }
-                ParamType::AnsiString => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::AnsiString }
-                }
-                ParamType::Error => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::Error }
-                }
-                ParamType::HResult => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::HResult }
-                }
-                ParamType::ClsId => {
-                    quote! { native_api_1c::native_api_1c_core::interface::ParamValue::ClsId }
                 }
             },
         }

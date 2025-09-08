@@ -46,7 +46,7 @@ impl<'a> FromIterator<(usize, &'a FuncDesc)> for CallAsFuncCollector {
                 native_api_1c::native_api_1c_core::interface::ParamValue
             > {
                 #body
-                Err(native_api_1c::native_api_1c_core::errors::MethodError::not_found("Method not found").into())
+                Err(())
             }
         };
 

@@ -10,40 +10,25 @@ impl FromField for PropDesc {
     fn from_field(field: &syn::Field) -> darling::Result<Self> {
         let field_ident = ident_option_to_darling_err(field.ident.as_ref())?;
 
-        // Поддерживаем как старые, так и новые атрибуты
         let add_in_prop_attr: Vec<&Attribute> = field
             .attrs
             .iter()
-            .filter(|attr| {
-                attr.path().is_ident("add_in_prop") || attr.path().is_ident("prop")
-            })
+            .filter(|attr| attr.path().is_ident("add_in_prop"))
             .collect();
         if add_in_prop_attr.is_empty() {
             return Err(
-                darling::Error::custom("Field must have `#[add_in_prop(...)]` or `#[prop(...)]` attribute")
+                darling::Error::custom("Field must have `add_in_prop` attribute")
                     .with_span(&field_ident.clone()),
             );
         } else if add_in_prop_attr.len() > 1 {
             return Err(
-                darling::Error::custom("Field can have only 1 property attribute (either `#[add_in_prop(...)]` or `#[prop(...)]`)")
+                darling::Error::custom("Field can have only 1 `add_in_prop` attribute")
                     .with_span(&field_ident.clone()),
             );
         };
         let add_in_prop_attr = add_in_prop_attr[0];
 
-        // Пробуем сначала новые атрибуты, потом старые
-        let prop_meta = if add_in_prop_attr.path().is_ident("prop") {
-            PropMetaNew::from_meta(&add_in_prop_attr.meta)
-                .map(|new| PropMeta {
-                    ty: new.ty,
-                    name: new.name,
-                    name_ru: new.ru,
-                    readable: new.readable,
-                    writable: new.writable,
-                })
-        } else {
-            PropMeta::from_meta(&add_in_prop_attr.meta)
-        }?;
+        let prop_meta = PropMeta::from_meta(&add_in_prop_attr.meta)?;
 
         Ok(Self {
             ident: field_ident.clone(),
@@ -60,21 +45,9 @@ impl FromField for PropDesc {
 
 #[derive(FromMeta, Debug)]
 pub struct PropMeta {
-    #[darling(rename = "ty")]
     pub ty: ParamType,
     pub name: PropName,
-    #[darling(rename = "name_ru")]
     pub name_ru: PropName,
-    pub readable: Option<()>,
-    pub writable: Option<()>,
-}
-
-/// Новые упрощенные атрибуты
-#[derive(FromMeta, Debug)]
-pub struct PropMetaNew {
-    pub ty: ParamType,
-    pub name: PropName,
-    pub ru: PropName,
     pub readable: Option<()>,
     pub writable: Option<()>,
 }
@@ -86,9 +59,7 @@ pub fn parse_props(struct_data: &DataStruct) -> Result<Vec<PropDesc>, darling::E
         let has_add_in_prop_attr = field
             .attrs
             .iter()
-            .any(|attr| {
-                attr.path().is_ident("add_in_prop") || attr.path().is_ident("prop")
-            });
+            .any(|attr| attr.path().is_ident("add_in_prop"));
         if !has_add_in_prop_attr {
             continue;
         };

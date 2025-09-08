@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use native_api_1c::native_api_1c_core::{
-    errors::NativeApiError,
     ffi::{
         connection::Connection,
         string_utils::{os_string, os_string_nil},
@@ -36,7 +35,7 @@ struct TestAddIn {
     #[arg(ty = Int)]
     #[arg(ty = Int, default = DEFAULT_VALUE)]
     #[returns(ty = Int, result)]
-    pub function: fn(&Self, i32, i32) -> Result<i32, NativeApiError>,
+    pub function: fn(&Self, i32, i32) -> Result<i32, ()>,
 
     #[add_in_func(name = PROCEDURE_NAME_EN, name_ru = PROCEDURE_NAME_RU)]
     #[arg(ty = Int)]

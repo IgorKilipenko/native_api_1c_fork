@@ -14,42 +14,34 @@ impl FromField for FuncDesc {
     fn from_field(field: &syn::Field) -> darling::Result<Self> {
         let field_ident = ident_option_to_darling_err(field.ident.as_ref())?;
 
-        // Поддерживаем как старые, так и новые атрибуты
         let add_in_func_attr: Vec<&Attribute> = field
             .attrs
             .iter()
-            .filter(|attr| {
-                attr.path().is_ident("add_in_func") || attr.path().is_ident("func")
-            })
+            .filter(|attr| attr.path().is_ident("add_in_func"))
             .collect();
         if add_in_func_attr.is_empty() {
             return Err(
-                darling::Error::custom("Field must have `#[add_in_func(...)]` or `#[func(...)]` attribute")
+                darling::Error::custom("Field must have `add_in_func` attribute")
                     .with_span(field_ident),
             );
         } else if add_in_func_attr.len() > 1 {
             return Err(
-                darling::Error::custom("Field can have only 1 function attribute (either `#[add_in_func(...)]` or `#[func(...)]`)")
+                darling::Error::custom("Field can have only 1 `add_in_func` attribute")
                     .with_span(field_ident),
             );
         };
         let add_in_func_attr = add_in_func_attr[0];
 
-        // Поддерживаем как старые, так и новые атрибуты
         let arg_attrs: Vec<&Attribute> = field
             .attrs
             .iter()
-            .filter(|attr| {
-                attr.path().is_ident("arg") || attr.path().is_ident("param")
-            })
+            .filter(|attr| attr.path().is_ident("arg"))
             .collect();
 
         let returns_attrs: Vec<&Attribute> = field
             .attrs
             .iter()
-            .filter(|attr| {
-                attr.path().is_ident("returns") || attr.path().is_ident("return_type")
-            })
+            .filter(|attr| attr.path().is_ident("returns"))
             .collect();
         if returns_attrs.len() > 1 {
             return Err(
@@ -59,47 +51,13 @@ impl FromField for FuncDesc {
         };
         let returns_attr = returns_attrs.first().copied();
 
-        // Пробуем сначала новые атрибуты, потом старые
-        let func_meta = if add_in_func_attr.path().is_ident("func") {
-            FuncHeadMetaNew::from_meta(&add_in_func_attr.meta)
-                .map(|new| FuncHeadMeta {
-                    name: new.name,
-                    name_ru: new.ru,
-                })
-        } else {
-            FuncHeadMeta::from_meta(&add_in_func_attr.meta)
-        }?;
-
+        let func_meta = FuncHeadMeta::from_meta(&add_in_func_attr.meta)?;
         let params_meta = arg_attrs
             .iter()
-            .map(|attr| {
-                if attr.path().is_ident("param") {
-                    FuncArgumentMetaNew::from_meta(&attr.meta)
-                        .map(|new| FuncArgumentMeta {
-                            ident: new.ident,
-                            ty: new.ty,
-                            default: new.default,
-                            as_in: new.as_in,
-                            as_out: new.as_out,
-                        })
-                } else {
-                    FuncArgumentMeta::from_meta(&attr.meta)
-                }
-            })
+            .map(|attr| FuncArgumentMeta::from_meta(&attr.meta))
             .collect::<darling::Result<Vec<FuncArgumentMeta>>>()?;
-
         let return_meta = returns_attr
-            .map(|attr| {
-                if attr.path().is_ident("return_type") {
-                    FuncReturnMetaNew::from_meta(&attr.meta)
-                        .map(|new| FuncReturnMeta {
-                            ty: new.ty,
-                            result: new.result,
-                        })
-                } else {
-                    FuncReturnMeta::from_meta(&attr.meta)
-                }
-            })
+            .map(|attr| FuncReturnMeta::from_meta(&attr.meta))
             .transpose()?;
         let return_value = match return_meta {
             Some(meta) => ReturnTypeDesc::from(meta),
@@ -159,33 +117,13 @@ impl FromField for FuncDesc {
 #[derive(FromMeta, Debug)]
 struct FuncHeadMeta {
     name: PropName,
-    #[darling(rename = "name_ru")]
     name_ru: PropName,
-}
-
-/// Новые упрощенные атрибуты для функций
-#[derive(FromMeta, Debug)]
-struct FuncHeadMetaNew {
-    name: PropName,
-    ru: PropName,
 }
 
 #[derive(FromMeta, Debug)]
 struct FuncArgumentMeta {
     ident: Option<syn::Ident>,
-    #[darling(rename = "ty")]
     ty: FuncParamType,
-    default: Option<Meta>,
-    #[allow(dead_code)]
-    as_in: Option<()>,
-    as_out: Option<()>,
-}
-
-/// Новые упрощенные атрибуты для аргументов функций
-#[derive(FromMeta, Debug)]
-struct FuncArgumentMetaNew {
-    ident: Option<syn::Ident>,
-    pub ty: FuncParamType,
     default: Option<Meta>,
     #[allow(dead_code)]
     as_in: Option<()>,
@@ -207,29 +145,12 @@ impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
         let allowed_defaults = match arg_meta.ty.clone() {
             FuncParamType::SelfType => false,
             FuncParamType::PlatformType(ty) => match ty {
-                // Базовые типы
                 ParamType::Bool => true,
                 ParamType::I32 => true,
                 ParamType::F64 => true,
                 ParamType::String => true,
                 ParamType::Date => false,
                 ParamType::Blob => false,
-                
-                // Дополнительные типы
-                ParamType::Null => false,
-                ParamType::I8 => true,
-                ParamType::I16 => true,
-                ParamType::I64 => true,
-                ParamType::U8 => true,
-                ParamType::U16 => true,
-                ParamType::U32 => true,
-                ParamType::U64 => true,
-                ParamType::F32 => true,
-                ParamType::DateDouble => false,
-                ParamType::AnsiString => true,
-                ParamType::Error => true,
-                ParamType::HResult => true,
-                ParamType::ClsId => false,
             },
         };
 
@@ -257,15 +178,7 @@ impl TryFrom<FuncArgumentMeta> for FuncArgumentDesc {
 
 #[derive(FromMeta, Debug)]
 struct FuncReturnMeta {
-    #[darling(rename = "ty")]
     ty: Option<ParamType>,
-    result: Option<()>,
-}
-
-/// Новые упрощенные атрибуты для возвращаемых значений
-#[derive(FromMeta, Debug)]
-struct FuncReturnMetaNew {
-    pub ty: Option<ParamType>,
     result: Option<()>,
 }
 
@@ -327,9 +240,7 @@ pub fn parse_functions(struct_data: &DataStruct) -> Result<Vec<FuncDesc>, darlin
         let has_add_in_func_attr = field
             .attrs
             .iter()
-            .any(|attr| {
-                attr.path().is_ident("add_in_func") || attr.path().is_ident("func")
-            });
+            .any(|attr| attr.path().is_ident("add_in_func"));
         if !has_add_in_func_attr {
             continue;
         };

@@ -216,7 +216,7 @@ impl IndexMut<usize> for ParamValues {
     }
 }
 
-pub type AddInWrapperResult<T> = NativeApiResult<T>;
+pub type AddInWrapperResult<T> = Result<T, ()>;
 
 /// `AddInWrapper` trait is used to implement the 1C AddIn interface,
 /// and is used in FFI to get necessary information about the AddIn

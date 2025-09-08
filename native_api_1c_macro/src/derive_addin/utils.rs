@@ -80,8 +80,8 @@ pub fn expr_from_os_value(expr: &TokenStream, ty: &ParamType) -> proc_macro2::To
                     #ty(val) => {
                         Ok(native_api_1c::native_api_1c_core::ffi::string_utils::from_os_string(&val))
                     },
-                    _ => Err(native_api_1c::native_api_1c_core::errors::TypeConversionError::unsupported("unknown", "string")),
-                }.map_err(|_| native_api_1c::native_api_1c_core::errors::TypeConversionError::unsupported("unknown", "string"))?.clone()
+                    _ => Err(()),
+                }?.clone()
             }
         },
         ParamType::Blob => quote! {
@@ -91,8 +91,8 @@ pub fn expr_from_os_value(expr: &TokenStream, ty: &ParamType) -> proc_macro2::To
                     #ty(val) => {
                         Ok(val)
                     },
-                    _ => Err(native_api_1c::native_api_1c_core::errors::TypeConversionError::unsupported("unknown", "blob")),
-                }.map_err(|_| native_api_1c::native_api_1c_core::errors::TypeConversionError::unsupported("unknown", "blob"))?.clone()
+                    _ => Err(()),
+                }?.clone()
             }
         },
         _ => quote! {
@@ -102,8 +102,8 @@ pub fn expr_from_os_value(expr: &TokenStream, ty: &ParamType) -> proc_macro2::To
                     #ty(val) => {
                         Ok(val)
                     },
-                    _ => Err(native_api_1c::native_api_1c_core::errors::TypeConversionError::unsupported("unknown", "generic")),
-                }.map_err(|_| native_api_1c::native_api_1c_core::errors::TypeConversionError::unsupported("unknown", "generic"))?.clone()
+                    _ => Err(()),
+                }?.clone()
             }
         },
     }
