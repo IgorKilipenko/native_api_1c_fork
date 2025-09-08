@@ -228,42 +228,26 @@ impl<'a> From<&'a TVariant> for ParamValue {
     fn from(param: &'a TVariant) -> ParamValue {
         unsafe {
             match param.vt {
-                VariantType::Empty => ParamValue::Empty,
-                VariantType::Bool => ParamValue::Bool(param.value.bool),
-                VariantType::Int8 => ParamValue::I8(param.value.i8),
-                VariantType::Int16 => ParamValue::I16(param.value.i16),
-                VariantType::Int32 => ParamValue::I32(param.value.i32),
-                VariantType::Int64 => ParamValue::I64(param.value.i64),
-                VariantType::UInt8 => ParamValue::U8(param.value.u8),
-                VariantType::UInt16 => ParamValue::U16(param.value.u16),
-                VariantType::UInt32 => ParamValue::U32(param.value.u32),
-                VariantType::UInt64 => ParamValue::U64(param.value.u64),
-                VariantType::Float => ParamValue::F32(param.value.f32),
-                VariantType::Double => ParamValue::F64(param.value.f64),
-                VariantType::Date => ParamValue::F64(param.value.date),
-                VariantType::Time => ParamValue::Date(param.value.tm),
-                VariantType::PStr => ParamValue::String(
-                    from_raw_parts(
-                        param.value.data_str.ptr as *const u16,
-                        param.value.data_str.len as usize,
-                    )
-                    .into(),
-                ),
-                VariantType::WStr => ParamValue::String(
+                VariantType::Empty => Self::Empty,
+                VariantType::Bool => Self::Bool(param.value.bool),
+                VariantType::Int32 => Self::I32(param.value.i32),
+                VariantType::Double => Self::F64(param.value.f64),
+                VariantType::Time => Self::Date(param.value.tm),
+                VariantType::WStr => Self::String(
                     from_raw_parts(
                         param.value.data_str.ptr,
                         param.value.data_str.len as usize,
                     )
                     .into(),
                 ),
-                VariantType::Blob => ParamValue::Blob(
+                VariantType::Blob => Self::Blob(
                     from_raw_parts(
                         param.value.data_blob.ptr,
                         param.value.data_blob.len as usize,
                     )
                     .into(),
                 ),
-                _ => ParamValue::Empty,
+                _ => Self::Empty,
             }
         }
     }
@@ -274,6 +258,7 @@ impl<'a> From<&'a TVariant> for ParamValue {
 #[derive(PartialEq, Debug)]
 pub enum VariantType {
     Empty = 0,
+    Null,
     Int16,     //int16_t
     Int32,     //int32_t
     Float,     //float
@@ -282,7 +267,9 @@ pub enum VariantType {
     Time,      //struct tm
     PStr,      //struct str    string
     Interface, //struct iface
+    Error,     //int32_t errCode
     Bool,      //bool
+    Variant,   //struct _tVariant *
     Int8,      //int8_t
     UInt8,     //uint8_t
     UInt16,    //uint16_t
@@ -291,8 +278,10 @@ pub enum VariantType {
     UInt64,    //uint64_t
     Int,       //int   Depends on architecture
     UInt,      //unsigned int  Depends on architecture
+    HResult,   //long hRes
     WStr,      //struct wstr
     Blob,      //means in struct str binary data contain
+    ClsID,     //UUID
 
     Undefined = 0xFFFF,
 }
@@ -322,43 +311,19 @@ pub struct DataBlob {
 /// Type encapsulating 1C variant values
 /// # Fields
 /// * `bool` - boolean value
-/// * `i8` - 8-bit signed integer
-/// * `i16` - 16-bit signed integer
-/// * `i32` - 32-bit signed integer
-/// * `i64` - 64-bit signed integer
-/// * `u8` - 8-bit unsigned integer
-/// * `u16` - 16-bit unsigned integer
-/// * `u32` - 32-bit unsigned integer
-/// * `u64` - 64-bit unsigned integer
-/// * `f32` - 32-bit float value
-/// * `f64` - 64-bit float value
-/// * `date` - Windows DATE format (f64)
-/// * `tm` - date-time value (struct tm)
-/// * `error` - error code (i32)
-/// * `hresult` - HRESULT code (i32)
+/// * `i32` - integer value
+/// * `f64` - float value
+/// * `tm` - date-time value
 /// * `data_str` - UTF-16 string value
 /// * `data_blob` - blob value
-/// * `cls_id` - UUID/GUID (16 bytes)
 #[repr(C)]
 pub union VariantValue {
     pub bool: bool,
-    pub i8: i8,
-    pub i16: i16,
     pub i32: i32,
-    pub i64: i64,
-    pub u8: u8,
-    pub u16: u16,
-    pub u32: u32,
-    pub u64: u64,
-    pub f32: f32,
     pub f64: f64,
-    pub date: f64,  // Windows DATE format
     pub tm: Tm,
-    pub error: i32,
-    pub hresult: i32,
     pub data_str: DataStr,
     pub data_blob: DataBlob,
-    pub cls_id: [u8; 16], // UUID/GUID
 }
 
 /// Type encapsulating 1C variant values for internal use
@@ -446,50 +411,6 @@ impl TVariant {
         self.vt = VariantType::Time;
     }
 
-    // Новые методы для поддержки дополнительных типов VARIANT
-
-
-    pub fn update_to_i8(&mut self, v: i8) {
-        self.value.i8 = v;
-        self.vt = VariantType::Int8;
-    }
-
-    pub fn update_to_i16(&mut self, v: i16) {
-        self.value.i16 = v;
-        self.vt = VariantType::Int16;
-    }
-
-    pub fn update_to_i64(&mut self, v: i64) {
-        self.value.i64 = v;
-        self.vt = VariantType::Int64;
-    }
-
-    pub fn update_to_u8(&mut self, v: u8) {
-        self.value.u8 = v;
-        self.vt = VariantType::UInt8;
-    }
-
-    pub fn update_to_u16(&mut self, v: u16) {
-        self.value.u16 = v;
-        self.vt = VariantType::UInt16;
-    }
-
-    pub fn update_to_u32(&mut self, v: u32) {
-        self.value.u32 = v;
-        self.vt = VariantType::UInt32;
-    }
-
-    pub fn update_to_u64(&mut self, v: u64) {
-        self.value.u64 = v;
-        self.vt = VariantType::UInt64;
-    }
-
-    pub fn update_to_f32(&mut self, v: f32) {
-        self.value.f32 = v;
-        self.vt = VariantType::Float;
-    }
-
-
     pub fn update_from_return(
         &mut self,
         mem_mngr: &MemoryManager,
@@ -498,15 +419,7 @@ impl TVariant {
         match value {
             ParamValue::Empty => self.vt = VariantType::Empty,
             ParamValue::Bool(v) => self.update_to_bool(*v),
-            ParamValue::I8(v) => self.update_to_i8(*v),
-            ParamValue::I16(v) => self.update_to_i16(*v),
             ParamValue::I32(v) => self.update_to_i32(*v),
-            ParamValue::I64(v) => self.update_to_i64(*v),
-            ParamValue::U8(v) => self.update_to_u8(*v),
-            ParamValue::U16(v) => self.update_to_u16(*v),
-            ParamValue::U32(v) => self.update_to_u32(*v),
-            ParamValue::U64(v) => self.update_to_u64(*v),
-            ParamValue::F32(v) => self.update_to_f32(*v),
             ParamValue::F64(v) => self.update_to_f64(*v),
             ParamValue::Date(v) => self.update_to_date(*v),
             ParamValue::String(v) => {
